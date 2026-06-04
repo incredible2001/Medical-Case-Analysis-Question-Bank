@@ -102,7 +102,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",s
 .self-test .answer-box,.self-test .exp-section{display:none}
 .self-test .tag-dx{display:none}
 .self-test .hl{background:transparent;font-weight:inherit;padding:0}
+body.self-test.revealed .hl{background:#fff3cd;padding:1px 3px;border-radius:2px;font-weight:600}
+body.self-test.revealed .tag-dx{display:inline}
 body.self-test .disease-text{visibility:hidden}
+body.self-test.revealed .disease-text{visibility:visible}
 .show-btn{padding:8px 20px;background:linear-gradient(135deg,#1890ff,#096dd9);color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;margin:8px 0}
 .show-btn:hover{opacity:.9}
 
@@ -138,7 +141,7 @@ body.self-test .disease-text{visibility:hidden}
   <div class="empty-state"><h3>← 选择左侧题目开始刷题</h3><p>当前已加载 <span id="totalCount">0</span> 道题</p></div>
 </div>
 
-<div class="version-bar">v1.0 · 生成于 2026-06-04 13:07 · LT @ HUST · <a href="https://github.com/incredible2001" target="_blank">GitHub @incredible2001</a></div>
+<div class="version-bar">v1.0 · 生成于 2026-06-04 13:13 · LT @ HUST · <a href="https://github.com/incredible2001" target="_blank">GitHub @incredible2001</a></div>
 
 <!-- 帮助弹窗 -->
 <div class="modal-overlay" id="helpModal">
@@ -323,6 +326,7 @@ function toggleFav(key) {
 
 function showQ(idx) {
   currentIdx = idx;
+  document.body.classList.remove('revealed');
   const q = questions[idx];
   if (!q) return;
   seen.add(q.key);
@@ -381,10 +385,12 @@ function reveal(btn){
   const target = btn.previousElementSibling;
   if(target){target.classList.remove('hidden-until-click');target.style.setProperty('display','block','important');}
   btn.style.display='none';
+  document.body.classList.add('revealed');
 }
 function revealAll(){
   document.querySelectorAll('.hidden-until-click').forEach(el=>{el.classList.remove('hidden-until-click');el.style.setProperty('display','block','important');});
   document.querySelectorAll('.show-btn').forEach(b=>b.style.display='none');
+  document.body.classList.add('revealed');
 }
 function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function formatRich(t){if(!t)return '';return esc(t).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}
