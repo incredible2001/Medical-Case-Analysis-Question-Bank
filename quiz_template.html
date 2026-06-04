@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>执医病例分析330题 - 刷题系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;background:#f5f5f5;color:#333;display:flex;height:100vh;overflow:hidden}
+
+/* 水印 */
+.main-content::after{content:"";position:fixed;top:0;left:280px;right:0;bottom:0;pointer-events:none;z-index:100;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ctext x='250' y='250' text-anchor='middle' dominant-baseline='middle' transform='rotate(-30 250 250)' font-size='14' fill='rgba(0,0,0,0.03)' font-family='sans-serif'%3ELT %40 HUST · GitHub: %40incredible2001%3C/text%3E%3C/svg%3E");background-repeat:repeat}
+
+/* 版本信息 */
+.version-bar{position:fixed;bottom:0;right:0;z-index:9999;padding:6px 14px;font-size:10px;color:rgba(0,0,0,.25);background:rgba(255,255,255,.6);border-radius:4px 0 0 0}
+.version-bar a{color:rgba(0,0,0,.35);text-decoration:none}
+.version-bar a:hover{text-decoration:underline;color:#1890ff}
+
+/* 侧边栏 */
+.sidebar{width:280px;background:#fff;border-right:1px solid #e8e8e8;display:flex;flex-direction:column;flex-shrink:0;position:relative;z-index:101}
+.sidebar-header{padding:14px 16px;border-bottom:1px solid #e8e8e8}
+.sidebar-header h2{font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sidebar-header h2 .help-btn{font-size:11px;color:#1890ff;cursor:pointer;font-weight:normal;border:1px solid #1890ff;border-radius:3px;padding:1px 6px}
+.sidebar-header h2 .help-btn:hover{background:#1890ff;color:#fff}
+.sys-filters{display:flex;gap:4px;flex-wrap:wrap}
+.sys-filters button{padding:3px 8px;font-size:11px;border:1px solid #d9d9d9;border-radius:3px;background:#fff;cursor:pointer;transition:all .15s}
+.sys-filters button:hover{border-color:#1890ff;color:#1890ff}
+.sys-filters button.active{background:#1890ff;color:#fff;border-color:#1890ff}
+.global-toggle{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #f0f0f0}
+.toggle-switch{position:relative;width:36px;height:20px}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#d9d9d9;border-radius:10px;transition:.3s}
+.toggle-slider:before{content:"";position:absolute;height:16px;width:16px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-switch input:checked+.toggle-slider{background:#1890ff}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(16px)}
+.toggle-label{font-size:12px;color:#666}
+.search-box{padding:8px 16px;border-bottom:1px solid #e8e8e8}
+.search-box input{width:100%;padding:5px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;outline:none}
+.search-box input:focus{border-color:#1890ff}
+.nav-list{flex:1;overflow-y:auto}
+.nav-group-title{padding:8px 16px;font-size:13px;font-weight:600;color:#1890ff;background:#f7f8fa;cursor:pointer;display:flex;justify-content:space-between;user-select:none;position:sticky;top:0;z-index:1}
+.nav-group-title .cnt{font-size:11px;color:#999;font-weight:normal}
+.nav-group-title .clear-btn{font-size:10px;color:#ff4d4f;font-weight:normal;cursor:pointer;border:1px solid #ffccc7;border-radius:3px;padding:0 5px;margin-left:6px;background:#fff}
+.nav-group-title .clear-btn:hover{background:#ff4d4f;color:#fff;border-color:#ff4d4f}
+.nav-group-items{display:none}
+.nav-group.open .nav-group-items{display:block}
+.nav-item{padding:7px 16px 7px 24px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;border-left:3px solid transparent;transition:all .12s}
+.nav-item:hover{background:#e6f7ff}
+.nav-item.active{background:#e6f7ff;border-left-color:#1890ff}
+.nav-item .qnum{color:#999;min-width:20px;font-size:11px}
+.nav-item .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.nav-item .dot.unseen{background:#d9d9d9}
+.nav-item .dot.seen{background:#52c41a}
+.nav-item .fav-icon{font-size:12px;color:#d9d9d9;margin-left:auto;flex-shrink:0;cursor:pointer;transition:color .15s}
+.nav-item .fav-icon:hover{color:#faad14}
+.nav-item .fav-icon.active{color:#faad14}
+.nav-item .disease-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+
+/* 主内容 */
+.main-content{flex:1;overflow-y:auto;padding:20px 28px;position:relative;z-index:101;background:#f5f5f5}
+.q-card{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+.q-header{padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center}
+.q-header .q-title{font-size:16px;font-weight:700}
+.q-header .q-tags{display:flex;gap:6px;align-items:center}
+.tag{padding:2px 8px;border-radius:3px;font-size:11px}
+.tag-sys{background:#e6f7ff;color:#1890ff}
+.tag-dx{background:#fff7e6;color:#d46b08}
+.tag-outline{background:#f9f0ff;color:#722ed1}
+.fav-btn{padding:4px 12px;border:1px solid #d9d9d9;border-radius:4px;background:#fff;cursor:pointer;font-size:13px;transition:all .15s}
+.fav-btn:hover{border-color:#faad14}
+.fav-btn.active{background:#fff7e6;border-color:#faad14;color:#d48806}
+.q-body{padding:20px}
+.scenario-box{background:#f6ffed;border-left:3px solid #52c41a;padding:10px 14px;border-radius:0 4px 4px 0;margin-bottom:14px;font-size:14px;color:#389e0d;font-weight:500}
+.question-text{font-size:14px;line-height:1.9;padding:14px 16px;background:#fafafa;border-radius:6px;margin-bottom:16px}
+.hl{background:#fff3cd;padding:1px 3px;border-radius:2px;font-weight:600}
+.answer-box{margin-bottom:16px;padding:14px 16px;background:#f0f5ff;border:1px solid #adc6ff;border-radius:6px}
+.answer-box .a-label{font-weight:700;color:#1890ff;margin-bottom:6px;font-size:14px}
+.answer-box .a-text{font-size:14px;line-height:1.7;white-space:pre-wrap}
+.exp-section{margin-bottom:16px}
+.exp-title{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:10px;padding:8px 0;border-bottom:2px solid #1890ff}
+.exp-card{margin-bottom:12px;padding:12px 14px;background:#fafafa;border-radius:6px}
+.exp-card h4{font-size:13px;color:#d46b08;margin-bottom:6px}
+.exp-card h4 .score{color:#999;font-weight:normal;font-size:12px}
+.exp-card p,.exp-card div{font-size:13px;line-height:1.8;color:#444;white-space:pre-wrap}
+.indicator-table{width:100%;border-collapse:collapse;font-size:13px}
+.indicator-table th{background:#f7f8fa;padding:8px 12px;text-align:left;font-weight:600;border-bottom:1px solid #e8e8e8}
+.indicator-table td{padding:8px 12px;border-bottom:1px solid #f0f0f0;line-height:1.6}
+.indicator-table tr:hover{background:#fafafa}
+.val-abnormal{color:#cf1322;font-weight:600}
+.diff-item{margin-bottom:10px;padding:10px 14px;border-left:3px solid #d9d9d9;background:#fafafa;border-radius:0 4px 4px 0}
+.diff-item h4{font-size:13px;margin-bottom:4px}
+.diff-item h4 .score{color:#999;font-weight:normal;font-size:12px}
+.diff-item p{font-size:13px;line-height:1.7;color:#555}
+.tips-box{padding:12px 14px;background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;font-size:13px;line-height:1.8;white-space:pre-wrap}
+.outline-content{font-size:13px;line-height:1.9;padding:14px 16px;background:#f9f0ff;border:1px solid #d3adf7;border-radius:6px;white-space:pre-wrap}
+.bottom-nav{display:flex;justify-content:space-between;align-items:center;padding:14px 0}
+.nav-btn{padding:7px 18px;border:1px solid #d9d9d9;border-radius:4px;background:#fff;cursor:pointer;font-size:13px}
+.nav-btn:hover{border-color:#1890ff;color:#1890ff}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed}
+.nav-btn.primary{background:#1890ff;color:#fff;border-color:#1890ff}
+.empty-state{text-align:center;padding:80px 20px;color:#999}
+.self-test .answer-box,.self-test .exp-section{display:none}
+.show-btn{padding:8px 20px;background:linear-gradient(135deg,#1890ff,#096dd9);color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;margin:8px 0}
+.show-btn:hover{opacity:.9}
+
+/* 帮助弹窗 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;justify-content:center;align-items:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:8px;width:560px;max-height:80vh;overflow-y:auto;padding:24px;position:relative}
+.modal h3{font-size:17px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #f0f0f0}
+.modal .close-btn{position:absolute;top:14px;right:16px;font-size:20px;cursor:pointer;color:#999;background:none;border:none}
+.modal .close-btn:hover{color:#333}
+.modal h4{font-size:14px;color:#1890ff;margin:14px 0 6px}
+.modal p,.modal li{font-size:13px;line-height:1.8;color:#555}
+.modal ul{padding-left:18px}
+.modal kbd{background:#f0f0f0;border:1px solid #d9d9d9;border-radius:3px;padding:1px 5px;font-size:12px;font-family:monospace}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>执医病例分析330题 <span class="help-btn" onclick="document.getElementById('helpModal').classList.add('show')">使用说明</span></h2>
+    <div class="sys-filters" id="sysFilters"></div>
+  </div>
+  <div class="global-toggle">
+    <label class="toggle-switch"><input type="checkbox" id="selfTestToggle"><span class="toggle-slider"></span></label>
+    <span class="toggle-label">自测模式</span>
+  </div>
+  <div class="search-box"><input type="text" placeholder="搜索题号、诊断、关键词..." id="searchInput"></div>
+  <div class="nav-list" id="navList"></div>
+</div>
+
+<div class="main-content" id="mainContent">
+  <div class="empty-state"><h3>← 选择左侧题目开始刷题</h3><p>当前已加载 <span id="totalCount">0</span> 道题</p></div>
+</div>
+
+<div class="version-bar">__VERSION__ · 生成于 __BUILD_TIME__ · LT @ HUST · <a href="https://github.com/incredible2001" target="_blank">GitHub @incredible2001</a></div>
+
+<!-- 帮助弹窗 -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal">
+    <button class="close-btn" onclick="document.getElementById('helpModal').classList.remove('show')">&times;</button>
+    <h3>执医病例分析330题 - 使用说明</h3>
+    <h4>功能介绍</h4>
+    <ul>
+      <li><b>左侧导航</b>：按临床系统分类（呼吸、循环、消化等13个系统），点击切换题目</li>
+      <li><b>章节大纲</b>：每个章节起始处有大纲/答题技巧总结页，帮助快速掌握该章节核心要点</li>
+      <li><b>诊断高亮</b>：题干中对诊断有提示作用的关键词用黄色底色标注</li>
+      <li><b>详细解析</b>：基于参考答案的教学式解读，包含诊断分析、关键指标、鉴别诊断、治疗原则、做题技巧</li>
+    </ul>
+    <h4>自测模式</h4>
+    <p>开启后隐藏答案和解析，需要点击按钮才能显示。适合先自行思考再核对答案。</p>
+    <h4>收藏功能</h4>
+    <p>点击题目右上角的 ☆ 按钮收藏题目，方便复习时快速定位。侧边栏顶部可筛选"仅看收藏"。收藏数据保存在浏览器本地。</p>
+    <h4>清除已看标记</h4>
+    <p>每个章节标题右侧有"清除"按钮，可清除该章节所有题目的已看（绿色小圆点）标记，方便二刷。</p>
+    <h4>搜索</h4>
+    <p>支持按题号、诊断名称、系统分类关键词搜索。</p>
+    <h4>快捷键</h4>
+    <ul>
+      <li><kbd>←</kbd> / <kbd>→</kbd>：上一题 / 下一题</li>
+      <li><kbd>空格</kbd>：自测模式下显示答案和解析</li>
+    </ul>
+    <h4>关于</h4>
+    <p>题目来源：番茄执医 · 病例分析330题真题速刷<br>
+    解析由 AI（OCR + API）自动生成，仅供参考学习<br>
+    制作：LT @ HUST · <a href="https://github.com/incredible2001" target="_blank" style="color:#1890ff">GitHub @incredible2001</a></p>
+  </div>
+</div>
+
+<script>
+const RAW = __QUIZ_DATA_PLACEHOLDER__;
+const OUTLINES = __OUTLINE_DATA_PLACEHOLDER__;
+let questions = [];
+let currentIdx = -1;
+let selfTest = false;
+let seen = new Set(JSON.parse(localStorage.getItem('seen_v2') || '[]'));
+let favorites = new Set(JSON.parse(localStorage.getItem('favorites_v2') || '[]'));
+let curFilter = 'all';
+let searchQ = '';
+
+function init() {
+  questions = Object.entries(RAW)
+    .filter(([, v]) => v.status === 'ok')
+    .sort((a, b) => (a[1].page_num || 0) - (b[1].page_num || 0))
+    .map(([k, v]) => ({ key: k, ...v }));
+  document.getElementById('totalCount').textContent = questions.length;
+  buildFilters();
+  buildNav();
+  bindEvents();
+  if (questions.length > 0) showQ(0);
+}
+
+const SYS_ORDER = ["呼吸系统","循环系统","消化系统","泌尿系统","妇产科","血液系统","内分泌系统","神经系统","运动系统","风湿免疫","儿科","传染病","其他"];
+
+function buildFilters() {
+  const sysMap = {};
+  questions.forEach(q => { const s = q.system || '其他'; sysMap[s] = (sysMap[s] || 0) + 1; });
+  const el = document.getElementById('sysFilters');
+  el.innerHTML = '<button class="active" data-sys="all">全部</button><button data-sys="fav">收藏</button><button data-sys="outline">大纲</button>';
+  SYS_ORDER.forEach(s => {
+    if (!sysMap[s]) return;
+    const b = document.createElement('button');
+    b.dataset.sys = s; b.textContent = s + '(' + sysMap[s] + ')';
+    el.appendChild(b);
+  });
+}
+
+function getChapterSeen(sysName) {
+  return questions.filter(q => q.system === sysName && seen.has(q.key)).map(q => q.key);
+}
+
+function clearChapterSeen(sysName) {
+  const keys = getChapterSeen(sysName);
+  keys.forEach(k => seen.delete(k));
+  localStorage.setItem('seen_v2', JSON.stringify([...seen]));
+  buildNav();
+  if (currentIdx >= 0) showQ(currentIdx);
+}
+
+function buildNav() {
+  const nav = document.getElementById('navList');
+  nav.innerHTML = '';
+
+  // 大纲筛选
+  if (curFilter === 'outline') {
+    const outlineList = Object.entries(OUTLINES).sort((a,b) => (a[1].page_num||0) - (b[1].page_num||0));
+    outlineList.forEach(([key, o]) => {
+      const d = document.createElement('div');
+      d.className = 'nav-item';
+      d.innerHTML = '<span class="qnum">📋</span><span class="disease-text">' + (o.system||'') + ' 大纲</span>';
+      d.onclick = () => showOutline(key, o);
+      nav.appendChild(d);
+    });
+    return;
+  }
+
+  let filtered = questions;
+  if (curFilter === 'fav') {
+    filtered = filtered.filter(q => favorites.has(q.key));
+  } else if (curFilter !== 'all') {
+    filtered = filtered.filter(q => q.system === curFilter);
+  }
+  if (searchQ) {
+    const sq = searchQ.toLowerCase();
+    filtered = filtered.filter(q =>
+      (q.question_num||'').includes(sq) ||
+      (q.disease||'').toString().toLowerCase().includes(sq) ||
+      (q.question||'').toLowerCase().includes(sq) ||
+      (q.system||'').toLowerCase().includes(sq)
+    );
+  }
+
+  const groups = {};
+  filtered.forEach(q => {
+    const sys = q.system || '其他';
+    if (!groups[sys]) groups[sys] = [];
+    groups[sys].push(q);
+  });
+
+  // 按固定顺序排列
+  const orderedSys = SYS_ORDER.filter(s => groups[s]);
+  if (groups['其他']) orderedSys.push('其他');
+
+  orderedSys.forEach(sys => {
+    const items = groups[sys];
+    const g = document.createElement('div');
+    g.className = 'nav-group open';
+    // 章节标题 + 清除按钮
+    const outlineKey = Object.entries(OUTLINES).find(([,o]) => o.system === sys);
+    let titleHTML = sys + ' <span class="cnt">' + items.length + '题</span>';
+    titleHTML += '<span class="clear-btn" onclick="event.stopPropagation();clearChapterSeen(\'' + sys + '\')">清除</span>';
+    if (outlineKey) {
+      titleHTML += '<span class="clear-btn" style="border-color:#d3adf7;color:#722ed1;margin-left:4px" onclick="event.stopPropagation();showOutline(\'' + outlineKey[0] + '\',OUTLINES[\'' + outlineKey[0] + '\'])">大纲</span>';
+    }
+    g.innerHTML = '<div class="nav-group-title">' + titleHTML + '</div>';
+    const wrap = document.createElement('div');
+    wrap.className = 'nav-group-items';
+    items.forEach(q => {
+      const d = document.createElement('div');
+      d.className = 'nav-item' + (questions.indexOf(q) === currentIdx ? ' active' : '');
+      const s = seen.has(q.key);
+      const isFav = favorites.has(q.key);
+      const dx = Array.isArray(q.disease) ? q.disease[0] : (q.disease || '');
+      d.innerHTML = '<span class="qnum">' + (q.question_num||'?') + '</span><span class="dot ' + (s?'seen':'unseen') + '"></span><span class="disease-text">' + (dx||q.scenario||'') + '</span><span class="fav-icon' + (isFav?' active':'') + '" onclick="event.stopPropagation();toggleFav(\''+q.key+'\')">' + (isFav?'★':'☆') + '</span>';
+      d.onclick = () => showQ(questions.indexOf(q));
+      wrap.appendChild(d);
+    });
+    g.querySelector('.nav-group-title').onclick = () => g.classList.toggle('open');
+    g.appendChild(wrap);
+    nav.appendChild(g);
+  });
+}
+
+function showOutline(key, o) {
+  currentIdx = -1;
+  buildNav();
+  let h = '<div class="q-card"><div class="q-header"><span class="q-title">📋 ' + (o.system||'') + ' · 章节大纲</span><div class="q-tags"><span class="tag tag-outline">大纲</span></div></div><div class="q-body">';
+  // 提取大纲文本
+  let text = (o.ocr_left || '') + '\n\n' + (o.ocr_right || '');
+  text = text.replace(/^公众号.*\n?/gm, '').replace(/^bilibili.*\n?/gm, '').replace(/^Lynn\n?/gm, '').replace(/^2026执医.*\n?/gm, '');
+  h += '<div class="outline-content">' + esc(text.trim()) + '</div>';
+  h += '</div></div>';
+  document.getElementById('mainContent').innerHTML = h;
+  document.getElementById('mainContent').scrollTop = 0;
+}
+
+function toggleFav(key) {
+  if (favorites.has(key)) favorites.delete(key); else favorites.add(key);
+  localStorage.setItem('favorites_v2', JSON.stringify([...favorites]));
+  buildNav();
+  const btn = document.querySelector('.fav-btn');
+  if (btn && questions[currentIdx] && questions[currentIdx].key === key) {
+    const isFav = favorites.has(key);
+    btn.className = 'fav-btn' + (isFav ? ' active' : '');
+    btn.textContent = isFav ? '★ 已收藏' : '☆ 收藏';
+  }
+}
+
+function showQ(idx) {
+  currentIdx = idx;
+  const q = questions[idx];
+  if (!q) return;
+  seen.add(q.key);
+  localStorage.setItem('seen_v2', JSON.stringify([...seen]));
+  buildNav();
+
+  const isFav = favorites.has(q.key);
+  const st = selfTest ? ' self-test' : '';
+  let h = '<div class="q-card'+st+'"><div class="q-header"><span class="q-title">第 '+(q.question_num||'?')+' 题</span><div class="q-tags"><span class="tag tag-sys">'+(q.system||'')+'</span>';
+  const dx = q.disease || '';
+  if (dx) h += '<span class="tag tag-dx">' + (Array.isArray(dx)?dx[0]:dx) + '</span>';
+  h += '<button class="fav-btn'+(isFav?' active':'')+'" onclick="toggleFav(\''+q.key+'\')">'+(isFav?'★ 已收藏':'☆ 收藏')+'</button>';
+  h += '</div></div><div class="q-body">';
+
+  if (q.scenario) h += '<div class="scenario-box">' + esc(q.scenario) + '</div>';
+  let qtext = (q.question||'').replace(/\n+/g,' ').replace(/\s{2,}/g,' ');
+  if (q.highlights) q.highlights.forEach(kw => {
+    if (!kw) return;
+    // 用字符串全局替换，避免正则特殊字符问题
+    const parts = qtext.split(kw);
+    if (parts.length > 1) qtext = parts.join('<span class="hl">'+esc(kw)+'</span>');
+  });
+  h += '<div class="question-text">' + qtext + '</div>';
+
+  const ac = selfTest ? ' hidden-until-click' : '';
+  if (q.answer) h += '<div class="answer-box'+ac+'"><div class="a-label">参考答案</div><div class="a-text">'+formatRich(q.answer)+'</div></div>';
+  if (selfTest) h += '<button class="show-btn" onclick="reveal(this)">显示答案</button>';
+
+  const exp = q.explanation || {};
+  if (exp.diagnosis_analysis?.length) {
+    h += '<div class="exp-section'+ac+'"><div class="exp-title">一、初步诊断分析</div>';
+    exp.diagnosis_analysis.forEach(d => h += '<div class="exp-card"><h4>'+esc(d.name)+' <span class="score">('+(d.score||'')+')</span></h4><div>'+formatRich(d.reasoning||'')+'</div></div>');
+    h += '</div>';
+  }
+  if (exp.key_indicators?.length) {
+    h += '<div class="exp-section'+ac+'"><div class="exp-title">二、关键指标与病史解读</div><table class="indicator-table"><tr><th>指标/表现</th><th>本题数值</th><th>临床意义</th></tr>';
+    exp.key_indicators.forEach(ind => h += '<tr><td>'+esc(ind.item||'')+'</td><td class="val-abnormal">'+esc(ind.value||'')+'</td><td>'+esc(ind.significance||'')+'</td></tr>');
+    h += '</table></div>';
+  }
+  if (exp.differential_diagnosis?.length) {
+    h += '<div class="exp-section'+ac+'"><div class="exp-title">三、鉴别诊断分析</div>';
+    exp.differential_diagnosis.forEach(d => h += '<div class="diff-item"><h4>'+esc(d.name)+' <span class="score">('+(d.score||'')+')</span></h4><p>'+formatRich(d.analysis||'')+'</p></div>');
+    h += '</div>';
+  }
+  if (exp.further_workup) h += '<div class="exp-section'+ac+'"><div class="exp-title">四、进一步检查</div><div class="exp-card"><div>'+formatRich(exp.further_workup)+'</div></div></div>';
+  if (exp.treatment_principles) h += '<div class="exp-section'+ac+'"><div class="exp-title">五、治疗原则</div><div class="exp-card"><div>'+formatRich(exp.treatment_principles)+'</div></div></div>';
+  if (exp.exam_tips) h += '<div class="exp-section'+ac+'"><div class="exp-title">做题技巧</div><div class="tips-box">'+formatRich(exp.exam_tips)+'</div></div>';
+  if (selfTest) h += '<button class="show-btn" onclick="revealAll()">显示完整解析</button>';
+  h += '</div></div>';
+  h += '<div class="bottom-nav"><button class="nav-btn" '+(idx<=0?'disabled':'')+' onclick="showQ('+(idx-1)+')">上一题</button><span style="color:#999;font-size:12px">'+(idx+1)+' / '+questions.length+'</span><button class="nav-btn primary" '+(idx>=questions.length-1?'disabled':'')+' onclick="showQ('+(idx+1)+')">下一题</button></div>';
+  document.getElementById('mainContent').innerHTML = h;
+  document.getElementById('mainContent').scrollTop = 0;
+}
+
+function reveal(btn){
+  const target = btn.previousElementSibling;
+  if(target){target.classList.remove('hidden-until-click');target.style.setProperty('display','block','important');}
+  btn.style.display='none';
+}
+function revealAll(){
+  document.querySelectorAll('.hidden-until-click').forEach(el=>{el.classList.remove('hidden-until-click');el.style.setProperty('display','block','important');});
+  document.querySelectorAll('.show-btn').forEach(b=>b.style.display='none');
+}
+function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function formatRich(t){if(!t)return '';return esc(t).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}
+
+function bindEvents(){
+  document.getElementById('selfTestToggle').onchange=function(){selfTest=this.checked;if(currentIdx>=0)showQ(currentIdx)};
+  document.getElementById('searchInput').oninput=function(){searchQ=this.value.trim();buildNav()};
+  document.getElementById('sysFilters').onclick=function(e){
+    if(e.target.tagName!=='BUTTON')return;
+    curFilter=e.target.dataset.sys;
+    this.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    buildNav();
+  };
+  document.getElementById('helpModal').onclick=function(e){if(e.target===this)this.classList.remove('show')};
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT')return;
+    if(e.key==='ArrowLeft'&&currentIdx>0)showQ(currentIdx-1);
+    if(e.key==='ArrowRight'&&currentIdx<questions.length-1)showQ(currentIdx+1);
+    if(e.key===' '){e.preventDefault();revealAll()}
+  });
+}
+init();
+</script>
+</body>
+</html>

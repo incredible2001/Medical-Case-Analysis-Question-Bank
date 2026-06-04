@@ -1,0 +1,25 @@
+# 大文件 - 不提交到git
+*.pdf
+pages/*.png
+output/analyze.log
+output/quiz - *.html
+
+# 测试/临时HTML
+quiz测试版本*.html
+analyze.log
+
+# 临时文件
+*.pyc
+__pycache__/
+.env
+.tmp
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 系统文件
+Thumbs.db
+Desktop.ini
+*.tmp
