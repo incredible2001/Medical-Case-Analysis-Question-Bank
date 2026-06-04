@@ -98,7 +98,7 @@ def main():
 
     html = html.replace(PLACEHOLDER, json.dumps(questions, ensure_ascii=False))
     html = html.replace(OUTLINE_PLACEHOLDER, json.dumps(outlines, ensure_ascii=False))
-    html = html.replace(VERSION_PLACEHOLDER, "v1.0")
+    html = html.replace(VERSION_PLACEHOLDER, "v1.2.1")
     html = html.replace(TIME_PLACEHOLDER, datetime.now().strftime("%Y-%m-%d %H:%M"))
 
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
